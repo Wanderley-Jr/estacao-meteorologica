@@ -3,23 +3,24 @@
 #include <DHT.h>
 #include <HTTPClient.h>
 
-// Inicialização do DHT
+// Sensor DHT
 #define DHTPIN 33
 #define DHTTYPE DHT11
-
 DHT dht(DHTPIN, DHTTYPE);
-
 float temperature = 0;
 float humidity = 0;
 
-// Dados sobre o Wi-Fi
-const char* ssid = "FBI_2G";
-const char* password = "123";
+// Sensor de umidade do solo
+#define MHPIN 32
+float soilHumidity = 0;
 
-// Dados sobre o servidor PHP
-String server = "http://192.168.1.2/estacao_metereologica/upload_medida.php";
+// Dados sobre o Wi-Fi
+const char* ssid = "Alunos";
+const char* password = "ifprpvai";
 
 void setup() {
+  pinMode(MHPIN, INPUT);
+
   Serial.begin(115200);
   dht.begin();
 }
@@ -39,6 +40,9 @@ void connect_wifi() {
 
   Serial.println("");
   Serial.println("Conectado à rede wi-fi!");
+
+  Serial.print("IP da rede wi-fi: ");
+  Serial.println(WiFi.localIP());
 }
 
 long lastMsg = 0;
@@ -53,13 +57,43 @@ void loop() {
     if (WiFi.status() != WL_CONNECTED) {
       connect_wifi();
     }
-    
-    temperature = dht.readTemperature();   
-    humidity = dht.readHumidity();
 
-    enviarMedidas(temperature, humidity);
+    listarDHT();
+    listarHumidadeDoSolo();
   }
 }
+
+void listarDHT() {
+  temperature = dht.readTemperature();   
+  humidity = dht.readHumidity();
+
+  Serial.println(">== Dados do sensor DHT ==<");
+
+  Serial.print("Temperatura: ");
+  Serial.print(temperature);
+  Serial.println("°C");
+
+  Serial.print("Humidade: ");
+  Serial.print(humidity);
+  Serial.println("%");
+
+  Serial.println(">=========================<");
+}
+
+void listarHumidadeDoSolo() {
+  humidity = (static_cast<float>(analogRead(MHPIN))*100.0f) / 4095.0f;
+
+  Serial.println(">== Dados do sensor 080-MH ==<");
+
+  Serial.print("Humidade do solo: ");
+  Serial.print(humidity);
+  Serial.println("%");
+
+  Serial.println(">===========================<");
+}
+
+// Dados sobre o servidor PHP
+String server = "http://172.39.1.28/estacao_metereologica/upload_medida.php";
 
 void enviarMedidas(float temperature, float humidity) {
   HTTPClient http;
