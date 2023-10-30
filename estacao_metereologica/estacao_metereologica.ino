@@ -1,28 +1,35 @@
 #include <WiFi.h>
-//#include <Wire.h>
 #include <DHT.h>
-#include <HTTPClient.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 // Sensor DHT
-#define DHTPIN 33
-#define DHTTYPE DHT11
-DHT dht(DHTPIN, DHTTYPE);
+#define DHT_PIN 34
+#define DHT_TYPE DHT11
+DHT dht(DHT_PIN, DHT_TYPE);
 float temperature = 0;
 float humidity = 0;
 
 // Sensor de umidade do solo
-#define MHPIN 32
+#define SOIL_HUMIDITY_PIN 35
 float soilHumidity = 0;
+
+// Sensor de temperatura do solo
+#define SOIL_TEMPERATURE_PIN 32
+float soilTemperature = 0;
+OneWire oneWire(SOIL_TEMPERATURE_PIN);
+DallasTemperature sensors(&oneWire);
 
 // Dados sobre o Wi-Fi
 const char* ssid = "Alunos";
 const char* password = "ifprpvai";
 
 void setup() {
-  pinMode(MHPIN, INPUT);
+  pinMode(SOIL_TEMPERATURE_PIN, INPUT_PULLUP);
 
   Serial.begin(115200);
   dht.begin();
+  sensors.begin();
 }
 
 void connect_wifi() {
@@ -60,6 +67,7 @@ void loop() {
 
     listarDHT();
     listarHumidadeDoSolo();
+    listarTemperaturaDoSolo();
   }
 }
 
@@ -81,13 +89,26 @@ void listarDHT() {
 }
 
 void listarHumidadeDoSolo() {
-  humidity = (static_cast<float>(analogRead(MHPIN))*100.0f) / 4095.0f;
+  soilHumidity = analogRead(SOIL_HUMIDITY_PIN);
 
-  Serial.println(">== Dados do sensor 080-MH ==<");
+  Serial.println(">== Dados do sensor de humidade do solo ==<");
 
   Serial.print("Humidade do solo: ");
-  Serial.print(humidity);
+  Serial.print(soilHumidity);
   Serial.println("%");
+
+  Serial.println(">===========================<");
+}
+
+void listarTemperaturaDoSolo() {
+  sensors.requestTemperatures();
+  soilTemperature = sensors.getTempC(0);
+
+  Serial.println(">== Dados do sensor de temperatura do solo ==<");
+
+  Serial.print("Temperatura do solo: ");
+  Serial.print(soilTemperature);
+  Serial.println("°C");
 
   Serial.println(">===========================<");
 }
@@ -95,34 +116,34 @@ void listarHumidadeDoSolo() {
 // Dados sobre o servidor PHP
 String server = "http://172.39.1.28/estacao_metereologica/upload_medida.php";
 
-void enviarMedidas(float temperature, float humidity) {
-  HTTPClient http;
+// void enviarMedidas(float temperature, float humidity) {
+//   HTTPClient http;
 
-  http.begin(server.c_str());
-  http.addHeader("Content-Type", "application/json");
+//   http.begin(server.c_str());
+//   http.addHeader("Content-Type", "application/json");
 
-  String body = "{ ";
-  body += "\"temperatura\": ";
-  body += temperature;
-  body += ", ";
-  body += "\"umidade\": ";
-  body += humidity;
-  body += " }";
+//   String body = "{ ";
+//   body += "\"temperatura\": ";
+//   body += temperature;
+//   body += ", ";
+//   body += "\"umidade\": ";
+//   body += humidity;
+//   body += " }";
 
-  int httpResponseCode = http.POST(body.c_str());
+//   int httpResponseCode = http.POST(body.c_str());
 
-  if (httpResponseCode>0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
+//   if (httpResponseCode>0) {
+//     Serial.print("HTTP Response code: ");
+//     Serial.println(httpResponseCode);
 
-    Serial.println("Payload: ");
-    String payload = http.getString();
-    Serial.println(payload);
-  }
-  else {
-    Serial.print("Ocorreu um erro, HTTP Response code: ");
-    Serial.println(httpResponseCode);
-  }
+//     Serial.println("Payload: ");
+//     String payload = http.getString();
+//     Serial.println(payload);
+//   }
+//   else {
+//     Serial.print("Ocorreu um erro, HTTP Response code: ");
+//     Serial.println(httpResponseCode);
+//   }
 
-  http.end();
-}
+//   http.end();
+// }
