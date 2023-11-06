@@ -3,19 +3,32 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
+// 32 (amarelo) - temp solo
+// 33 (verde) - DHT11
+// 25 (azul) - umidade solo
+// 26 (laranja) - chuva
+
+// Sensor fotovoltaico
+#define LIGHT_PIN 32
+float light = 0;
+
 // Sensor DHT
-#define DHT_PIN 34
+#define DHT_PIN 33
 #define DHT_TYPE DHT11
 DHT dht(DHT_PIN, DHT_TYPE);
 float temperature = 0;
 float humidity = 0;
 
 // Sensor de umidade do solo
-#define SOIL_HUMIDITY_PIN 35
+#define SOIL_HUMIDITY_PIN 25
 float soilHumidity = 0;
 
+// Sensor de chuva
+#define RAIN_PIN 26
+float rain = 0;
+
 // Sensor de temperatura do solo
-#define SOIL_TEMPERATURE_PIN 32
+#define SOIL_TEMPERATURE_PIN 27
 float soilTemperature = 0;
 OneWire oneWire(SOIL_TEMPERATURE_PIN);
 DallasTemperature sensors(&oneWire);
@@ -25,7 +38,7 @@ const char* ssid = "Alunos";
 const char* password = "ifprpvai";
 
 void setup() {
-  pinMode(SOIL_TEMPERATURE_PIN, INPUT_PULLUP);
+  pinMode(SOIL_TEMPERATURE_PIN, INPUT);
 
   Serial.begin(115200);
   dht.begin();
@@ -54,23 +67,6 @@ void connect_wifi() {
 
 long lastMsg = 0;
 
-void loop() {
-  // A cada 5 segundos, realiza uma request POST para o servidor, enviando os dados medidos pelo sensor DHT.
-  long now = millis();
-  if (now - lastMsg > 5000) {
-    lastMsg = now;
-
-    // Manter conexão wi-fi ativa.
-    if (WiFi.status() != WL_CONNECTED) {
-      connect_wifi();
-    }
-
-    listarDHT();
-    listarHumidadeDoSolo();
-    listarTemperaturaDoSolo();
-  }
-}
-
 void listarDHT() {
   temperature = dht.readTemperature();   
   humidity = dht.readHumidity();
@@ -89,9 +85,13 @@ void listarDHT() {
 }
 
 void listarHumidadeDoSolo() {
-  soilHumidity = analogRead(SOIL_HUMIDITY_PIN);
+  soilHumidity = map(analogRead(SOIL_HUMIDITY_PIN), 3600, 4095, 0, 100); // 3600 é o menor valor que obtemos
 
   Serial.println(">== Dados do sensor de humidade do solo ==<");
+
+  Serial.print("Valor real: ");
+  Serial.print(analogRead(SOIL_HUMIDITY_PIN));
+  Serial.print(" | ");
 
   Serial.print("Humidade do solo: ");
   Serial.print(soilHumidity);
@@ -100,9 +100,32 @@ void listarHumidadeDoSolo() {
   Serial.println(">===========================<");
 }
 
+void listarChuva() {
+  rain = 100 - (analogRead(RAIN_PIN) * 100 / 4095);;
+
+  Serial.println(">== Dados de chuva ==<");
+
+  Serial.print("Valor real: ");
+  Serial.print(analogRead(RAIN_PIN));
+  Serial.print(" | ");
+
+  Serial.print("Humidade: ");
+  Serial.print(rain);
+  Serial.println("%");
+
+  Serial.println(">===========================<");
+}
+
+void listarLuz() {
+  light = analogRead(LIGHT_PIN);
+
+  Serial.print("Luz: ");
+  Serial.println(light);
+}
+
 void listarTemperaturaDoSolo() {
   sensors.requestTemperatures();
-  soilTemperature = sensors.getTempC(0);
+  soilTemperature = sensors.getTempCByIndex(0);
 
   Serial.println(">== Dados do sensor de temperatura do solo ==<");
 
@@ -113,37 +136,11 @@ void listarTemperaturaDoSolo() {
   Serial.println(">===========================<");
 }
 
-// Dados sobre o servidor PHP
-String server = "http://172.39.1.28/estacao_metereologica/upload_medida.php";
-
-// void enviarMedidas(float temperature, float humidity) {
-//   HTTPClient http;
-
-//   http.begin(server.c_str());
-//   http.addHeader("Content-Type", "application/json");
-
-//   String body = "{ ";
-//   body += "\"temperatura\": ";
-//   body += temperature;
-//   body += ", ";
-//   body += "\"umidade\": ";
-//   body += humidity;
-//   body += " }";
-
-//   int httpResponseCode = http.POST(body.c_str());
-
-//   if (httpResponseCode>0) {
-//     Serial.print("HTTP Response code: ");
-//     Serial.println(httpResponseCode);
-
-//     Serial.println("Payload: ");
-//     String payload = http.getString();
-//     Serial.println(payload);
-//   }
-//   else {
-//     Serial.print("Ocorreu um erro, HTTP Response code: ");
-//     Serial.println(httpResponseCode);
-//   }
-
-//   http.end();
-// }
+void loop() {
+  listarDHT();
+  listarHumidadeDoSolo();
+  listarLuz();
+  listarChuva();
+  listarTemperaturaDoSolo();
+  delay(5000);
+}
