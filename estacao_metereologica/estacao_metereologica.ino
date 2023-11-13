@@ -1,3 +1,4 @@
+#include <Adafruit_BMP085.h>
 #include <WiFi.h>
 #include <DHT.h>
 #include <OneWire.h>
@@ -33,6 +34,11 @@ float soilTemperature = 0;
 OneWire oneWire(SOIL_TEMPERATURE_PIN);
 DallasTemperature sensors(&oneWire);
 
+// Barômetro
+#define AIR_PRESSURE_PIN 14
+float airPressure = 0;
+Adafruit_BMP085 bmp;
+
 // Dados sobre o Wi-Fi
 const char* ssid = "Alunos";
 const char* password = "ifprpvai";
@@ -43,6 +49,7 @@ void setup() {
   Serial.begin(115200);
   dht.begin();
   sensors.begin();
+  bmp.begin();
 }
 
 void connect_wifi() {
@@ -71,8 +78,6 @@ void listarDHT() {
   temperature = dht.readTemperature();   
   humidity = dht.readHumidity();
 
-  Serial.println(">== Dados do sensor DHT ==<");
-
   Serial.print("Temperatura: ");
   Serial.print(temperature);
   Serial.println("°C");
@@ -80,44 +85,26 @@ void listarDHT() {
   Serial.print("Humidade: ");
   Serial.print(humidity);
   Serial.println("%");
-
-  Serial.println(">=========================<");
 }
 
 void listarHumidadeDoSolo() {
-  soilHumidity = map(analogRead(SOIL_HUMIDITY_PIN), 3600, 4095, 0, 100); // 3600 é o menor valor que obtemos
-
-  Serial.println(">== Dados do sensor de humidade do solo ==<");
-
-  Serial.print("Valor real: ");
-  Serial.print(analogRead(SOIL_HUMIDITY_PIN));
-  Serial.print(" | ");
+  soilHumidity = map(analogRead(SOIL_HUMIDITY_PIN), 0, 4095, 100, 0); // 3600 é o menor valor que obtemos
 
   Serial.print("Humidade do solo: ");
   Serial.print(soilHumidity);
   Serial.println("%");
-
-  Serial.println(">===========================<");
 }
 
 void listarChuva() {
-  rain = 100 - (analogRead(RAIN_PIN) * 100 / 4095);;
-
-  Serial.println(">== Dados de chuva ==<");
-
-  Serial.print("Valor real: ");
-  Serial.print(analogRead(RAIN_PIN));
-  Serial.print(" | ");
+  rain = map(analogRead(RAIN_PIN), 0, 4095, 100, 0);
 
   Serial.print("Humidade: ");
   Serial.print(rain);
   Serial.println("%");
-
-  Serial.println(">===========================<");
 }
 
 void listarLuz() {
-  light = analogRead(LIGHT_PIN);
+  light = map(analogRead(LIGHT_PIN), 0, 4095, 100, 0);
 
   Serial.print("Luz: ");
   Serial.println(light);
@@ -127,20 +114,27 @@ void listarTemperaturaDoSolo() {
   sensors.requestTemperatures();
   soilTemperature = sensors.getTempCByIndex(0);
 
-  Serial.println(">== Dados do sensor de temperatura do solo ==<");
-
   Serial.print("Temperatura do solo: ");
   Serial.print(soilTemperature);
   Serial.println("°C");
+}
 
-  Serial.println(">===========================<");
+void listarBarometro() {
+  airPressure = bmp.readPressure();
+
+  Serial.print("Pressão do ar: ");
+  Serial.print(airPressure);
+  Serial.println( "hPa");
 }
 
 void loop() {
+  Serial.println("<=====================>");
   listarDHT();
   listarHumidadeDoSolo();
   listarLuz();
   listarChuva();
   listarTemperaturaDoSolo();
+  listarBarometro();
+  Serial.println("<=====================>\n\n");
   delay(5000);
 }
