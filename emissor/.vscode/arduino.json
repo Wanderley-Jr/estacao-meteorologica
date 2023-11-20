@@ -1,0 +1,8 @@
+{
+    "port": "COM3",
+    "configuration": "PartitionScheme=default,PSRAM=disabled,CPUFreq=240,UploadSpeed=921600,DebugLevel=none,LORAWAN_REGION=1,LoRaWanDebugLevel=0,EraseFlash=none",
+    "board": "esp32:esp32:heltec_wifi_lora_32",
+    "programmer": "esptool",
+    "sketch": "emissor\\emissor.ino",
+    "output": "../build/emissor/"
+}

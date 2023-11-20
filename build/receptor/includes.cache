@@ -1,0 +1,37 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\variants\\heltec_wifi_lora_32"
+  },
+  {
+    "Sourcefile": "C:\\Users\\junin\\Desktop\\IDE esp32\\Projetos\\estacao_metereologica\\build\\receptor\\sketch\\receptor.ino.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\junin\\Desktop\\IDE esp32\\Projetos\\estacao_metereologica\\build\\receptor\\sketch\\receptor.ino.cpp",
+    "Include": "LoRa.h",
+    "Includepath": "C:\\Users\\junin\\Documents\\Arduino\\libraries\\LoRa\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\junin\\Desktop\\IDE esp32\\Projetos\\estacao_metereologica\\build\\receptor\\sketch\\receptor.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\junin\\Documents\\Arduino\\libraries\\LoRa\\src\\LoRa.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
