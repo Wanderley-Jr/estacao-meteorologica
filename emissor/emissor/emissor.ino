@@ -1,5 +1,5 @@
 #include <SPI.h>
-#include <LoRa.h>
+#include <heltec.h>
 
 int counter = 0;
 
@@ -11,7 +11,7 @@ void setup() {
   
   LoRa.setPins(18, 14, 26);
 
-  while (!LoRa.begin(433E6)) {
+  while (!LoRa.begin(433E6, true)) {
     Serial.print("Falha ao iniciar o lora!");
     delay(500);
     Serial.println(" Tentando novamente...");
