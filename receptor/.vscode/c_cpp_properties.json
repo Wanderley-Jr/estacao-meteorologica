@@ -220,6 +220,8 @@
                 "C:\\Users\\junin\\Documents\\Arduino\\libraries\\Heltec_ESP32_Dev-Boards\\src",
                 "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Wire\\src",
                 "C:\\Users\\junin\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\SPI\\src",
+                "C:\\Users\\junin\\Documents\\Arduino\\libraries\\Crypto\\src",
+                "C:\\Users\\junin\\Documents\\Arduino\\libraries\\ArduinoJson\\src",
                 "c:\\users\\junin\\appdata\\local\\arduino15\\packages\\esp32\\tools\\xtensa-esp32-elf-gcc\\esp-2021r2-patch5-8.4.0\\xtensa-esp32-elf\\include\\c++\\8.4.0",
                 "c:\\users\\junin\\appdata\\local\\arduino15\\packages\\esp32\\tools\\xtensa-esp32-elf-gcc\\esp-2021r2-patch5-8.4.0\\xtensa-esp32-elf\\include\\c++\\8.4.0\\xtensa-esp32-elf",
                 "c:\\users\\junin\\appdata\\local\\arduino15\\packages\\esp32\\tools\\xtensa-esp32-elf-gcc\\esp-2021r2-patch5-8.4.0\\xtensa-esp32-elf\\include\\c++\\8.4.0\\backward",
