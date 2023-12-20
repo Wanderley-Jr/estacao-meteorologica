@@ -5,8 +5,8 @@
 #include <DallasTemperature.h>
 #include <Crypto.h>
 #include <AES.h>
-
-#include "CapacitiveSensor.cpp"
+#include <CapacitiveSensor.h>
+#include <Packet.h>
 
 /*
  * Pins
@@ -40,7 +40,7 @@ void setup() {
 
   // LoRa setup
   LoRa.setPins(18, 14, 26);
-
+  LoRa.enableCrc();
   while (!LoRa.begin(433E6, true)) {
     Serial.println("Fail on LoRa startup!");
     delay(1000);
@@ -62,29 +62,17 @@ void setup() {
   }
 
   barometer.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
-                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
-                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+                        Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                        Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                        Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                        Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 
   Serial.println("Setup finished!");
 }
 
-// 16 bits
-struct Packet {
-  unsigned int id;
-  float value;
-  char name[5];
-};
-
-void sendPacket(int id, char name[5], float value) {
+void sendPacket(const int id, const float value, char* name) {
   // Create structure
-  Packet packet;
-  for (int i = 0; i < 5; i++) {
-    packet.name[i] = name[i];
-  }
-  packet.id = id;
-  packet.value = value;
+  Packet packet = createPacket(id, value, name, 174);
 
   // Encrypt
   byte encrypted[16];
@@ -112,13 +100,13 @@ void sendData() {
 
   soilTemperatureSensor.requestTemperatures();
 
-  sendPacket(packetId++, "aTmp", dht.readTemperature()); // Air temperature
-  sendPacket(packetId++, "aHmd", dht.readHumidity()); // Air humidity
-  sendPacket(packetId++, "sTmp", soilTemperatureSensor.getTempCByIndex(0)); // Soil temperature
-  sendPacket(packetId++, "sHmd", soilHumiditySensor.read());
-  sendPacket(packetId++, "rai", rainSensor.read()); // Rain sensor
-  sendPacket(packetId++, "airP", barometer.readPressure()); // Air pressure
-  sendPacket(packetId++, "lumi", lightSensor.read()); // Luminosity
+  sendPacket(packetId++, dht.readTemperature(), "aTmp"); // Air temperature
+  sendPacket(packetId++, dht.readHumidity(), "aHum"); // Air humidity
+  sendPacket(packetId++, soilTemperatureSensor.getTempCByIndex(0), "sTmp"); // Soil temperature
+  sendPacket(packetId++, soilHumiditySensor.read(), "sHum");
+  sendPacket(packetId++, rainSensor.read(), "rain"); // Rain sensor
+  sendPacket(packetId++, barometer.readPressure(), "aPrs"); // Air pressure
+  sendPacket(packetId++, lightSensor.read(), "lumi"); // Luminosity
 }
 
 void loop() {

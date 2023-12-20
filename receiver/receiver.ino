@@ -3,13 +3,7 @@
 #include <Crypto.h>
 #include <AES.h>
 #include <ArduinoJson.h>
-
-// 16 bits
-struct Packet {
-  unsigned int id;
-  float value;
-  char name[5];
-};
+#include <Packet.h>
 
 /* 
  * AES setup
@@ -31,6 +25,7 @@ void setup() {
 
 	// LoRa setup
 	LoRa.setPins(18, 14, 26);
+	LoRa.enableCrc();
 	while (!LoRa.begin(433E6, true)) {
 		Serial.println("Failure on LoRa setup!");
 		delay(1000);
@@ -53,14 +48,22 @@ void loop() {
 		LoRa.readBytes(encrypted, sizeof(encrypted));
 		aes128.decryptBlock((byte*) &packet, encrypted);
 
-		// Write data from packet to json
-		data[packet.name] = packet.value;
+		// Add 0 terminator to string
+		char packetName[PACKET_NAME_LENGTH+1];
+		for (int i = 0; i < sizeof(packet.name); i++) {
+			packetName[i] = packet.name[i];
+		}
+		packetName[PACKET_NAME_LENGTH] = 0;
+
+		// Save sensor name & value to JSON
+		data[packetName] = packet.value;
 	}
 	while (packet.id % 7 != 6);
 
 	// If there aren't 7 elements, we failed to receive at least one sensor reading.
 	if (data.size() != 7) {
 		Serial.println("Failed to gather sensor data!");
+		data.clear();
 		return;
 	}
 
@@ -72,7 +75,6 @@ void loop() {
 
 	// Serial.print("Mostrando na tela: ");
 	// Serial.println(packet);
-
 	// Heltec.display->clear();
 	// Heltec.display->drawString(0, 0, String("Packets recebidas: ") + receivedPackets);
 	// Heltec.display->drawString(0, 10, String("Rssi: ") + LoRa.packetRssi());
