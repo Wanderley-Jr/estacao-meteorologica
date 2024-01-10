@@ -1,6 +1,7 @@
 #include <Packet.h>
 #include <Arduino.h>
 #include <CRC32.h>
+#include <secrets.h>
 
 int getCrcHash(Packet packet) {
     static CRC32 crc32;
@@ -30,6 +31,7 @@ Packet createPacket(const unsigned int id, const char* name, const float value) 
 
 bool verifyPacket(Packet packet) {
     int hash = getCrcHash(packet);
+    
     if (hash != packet.crc32) {
         Serial.println("Invalid crc32 hash! Dropping packet...");
         return false;
@@ -42,4 +44,3 @@ bool verifyPacket(Packet packet) {
 
     return true;
 }
-

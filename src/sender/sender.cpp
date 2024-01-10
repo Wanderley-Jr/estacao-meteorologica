@@ -8,6 +8,7 @@
 #include <AES.h>
 #include <CapacitiveSensor.h>
 #include <Packet.h>
+#include <secrets.h>
 
 /*
  * Pins
@@ -33,7 +34,6 @@ Adafruit_BMP280 barometer; // Barometer
  * AES setup
  */
 AES128 aes128;
-byte aesKey[16] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
 
 void setup() {
   // Serial monitor setup
@@ -41,13 +41,13 @@ void setup() {
 
   // LoRa setup
   LoRa.setPins(18, 14, 26);
-  while (!LoRa.begin(433E6, true)) {
+  while (!LoRa.begin(915E6, true)) {
     Serial.println("Fail on LoRa startup!");
     delay(1000);
   }
 
   // AES128 setup
-  aes128.setKey(aesKey, 16);
+  aes128.setKey(AES128_KEY, 16);
 
   // Sensor setup
   dht.begin();
@@ -67,7 +67,7 @@ void setup() {
                         Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                         Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
 
-  Serial.println("Setup finished!");
+  Serial.println("Setup finished!!!");
 }
 
 void sendPacket(const char id, const char *name, const float value) {

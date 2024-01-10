@@ -1,7 +1,6 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#define PACKET_MAGIC_NUMBER 174
 #define PACKET_NAME_LENGTH 3
 
 // 16 bytes

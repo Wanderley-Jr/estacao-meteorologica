@@ -6,53 +6,118 @@
 #include <Packet.h>
 #include <CRC32.h>
 #include <mutex>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <secrets.h>
 
 /* 
  * AES128 setup
  */
 AES128 aes128;
-byte aesKey[16] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
 
-StaticJsonDocument<1024> data;
+/*
+ * Wifi & HTTP setup
+ */
+WiFiClient wifi;
+HTTPClient http;
+StaticJsonDocument<1024> json;
+
 int lastSentPacketTime = -1;
+QueueHandle_t packetQueue = xQueueCreate(7, sizeof(Packet));
 
-void readPacket() {
-	while (!LoRa.parsePacket()); // Wait for packet
-
-	// Decrypt packet
+Packet receivePacket() {
 	Packet packet;
-	byte encrypted[16];
-	LoRa.readBytes(encrypted, 16);
-	aes128.decryptBlock((byte*) &packet, encrypted);
 
-	Serial.println(packet.id);
-	Serial.println(packet.name);
+	delay(10);
 
-	// Verify crc32 & magic number
-	if (!verifyPacket(packet)) return;
+	do {
+		// Wait for packet
+		while (!LoRa.parsePacket()); 
 
-	// Add 0 terminator to string name
-	char sensorName[PACKET_NAME_LENGTH+1];
-	memcpy(sensorName, packet.name, PACKET_NAME_LENGTH);
-	sensorName[PACKET_NAME_LENGTH] = 0;
+		// Decrypt packet
+		byte encrypted[16];
+		LoRa.readBytes(encrypted, 16);
+		aes128.decryptBlock((byte*) &packet, encrypted);
+	}
 
-	// Save sensor name & value to JSON
-	// TODO: remap sensor names into more understandable ones
-	data[sensorName] = packet.value;
+	// Repeat until valid packet is found
+	while (!verifyPacket(packet));
+
+	return packet;
 }
 
-void postPacket() {
-	// TODO: Send received packet data to PHP server
-	// for now, we just log it
-	String result;
-	serializeJson(data, result);
-	int size = data.size();
-	data.clear();
-
+void postPacketToServer(const Packet packet) {
+	String body;
+	serializeJson(json, body);
+	
 	Serial.print("Result[");
-	Serial.print(size);
+	Serial.print(json.size());
 	Serial.print("]: ");
-	Serial.println(result);
+	Serial.println(body);
+
+  	int httpResponseCode = http.POST(body);
+	json.clear();
+
+	http.begin("http://192.168.0.102/teste.php");
+  	http.addHeader("Content-Type", "application/json");
+
+	if (httpResponseCode>0) {
+		Serial.print("HTTP Response code: ");
+		Serial.println(httpResponseCode);
+
+		Serial.println("Payload: ");
+		String payload = http.getString();
+		Serial.println(payload);
+	}
+	else {
+		Serial.print("An error occurred while POSTing data. HTTP Response code: ");
+		Serial.println(httpResponseCode);
+	}
+
+	http.end();
+}
+
+void loop() {
+	Packet packet = receivePacket();
+	xQueueSend(packetQueue, &packet, portMAX_DELAY);
+}
+
+void internetSendTask(void *pvParameters) {
+	Packet packet;
+
+	for (;;) {
+		// Connect to wifi
+		if (WiFi.status() != WL_CONNECTED) {
+			delay(10);
+			Serial.printf("\nConnecting to wifi network: %s\n", WIFI_NAME);
+
+			WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
+
+			while (WiFi.status() != WL_CONNECTED) {
+				delay(1000);
+				Serial.println("Attemping connection...");
+			}
+
+			Serial.println("Connected to wifi network!\n");
+		}
+		
+		xQueueReceive(packetQueue, &packet, portMAX_DELAY);
+
+		// Add 0 terminator to string name
+		// TODO: remap sensor names into more understandable ones
+		char sensorName[PACKET_NAME_LENGTH+1];
+		memcpy(sensorName, packet.name, PACKET_NAME_LENGTH);
+		sensorName[PACKET_NAME_LENGTH] = 0;
+
+		// Save sensor name & value to JSON
+		json[sensorName] = packet.value;
+
+		// Post packets to internet every 5 seconds.
+		if (millis() - lastSentPacketTime >= 5000) {
+			postPacketToServer(packet);
+			lastSentPacketTime = millis();
+		}
+	}
 }
 
 void setup() {
@@ -65,22 +130,25 @@ void setup() {
 	Heltec.display->displayOn();
 
 	// AES128
-	aes128.setKey(aesKey, 16);
+	aes128.setKey(AES128_KEY, 16);
 
 	// LoRa setup
 	LoRa.setPins(18, 14, 26);
-	while (!LoRa.begin(433E6, true)) {
+	while (!LoRa.begin(915E6, true)) {
 		Serial.println("Failure on LoRa setup!");
 		delay(1000);
 	}
 	LoRa.receive();
 	Serial.println("Setup finished!!!");
-}
 
-void loop() {
-	while (millis() - lastSentPacketTime < 10000) {
-		readPacket();
-	}
-	postPacket();
-	lastSentPacketTime = millis();
+	// Setup internet thread
+	xTaskCreatePinnedToCore(
+		&internetSendTask,
+		"INTERNET_SEND_TASK",
+		4096,
+		nullptr,
+		0,
+		nullptr,
+		0
+	);
 }
