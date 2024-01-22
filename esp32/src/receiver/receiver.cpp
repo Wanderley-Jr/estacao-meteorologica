@@ -58,7 +58,7 @@ void postPacketToServer(const Packet packet) {
   	int httpResponseCode = http.POST(body);
 	json.clear();
 
-	http.begin("http://192.168.0.102/teste.php");
+	http.begin("https://192.168.1.2/upload_measurement.php");
   	http.addHeader("Content-Type", "application/json");
 
 	if (httpResponseCode>0) {
@@ -145,7 +145,7 @@ void setup() {
 	xTaskCreatePinnedToCore(
 		&internetSendTask,
 		"INTERNET_SEND_TASK",
-		4096,
+		8192,
 		nullptr,
 		0,
 		nullptr,
