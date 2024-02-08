@@ -1,14 +1,16 @@
-#include <CRC32.h>
 #include <heltec.h>
+#include <CRC32.h>
+#include <AES.h>
+
 #include <Adafruit_BMP280.h>
 #include <DHT.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include <Crypto.h>
-#include <AES.h>
-#include <CapacitiveSensor.h>
+
+// ~/include/
 #include <Packet.h>
-#include <secrets.h>
+#include <CapacitiveSensor.h>
+#include <Secrets.h>
 
 /*
  * Pins
@@ -104,7 +106,7 @@ void sendAllSensorData() {
 }
 
 void loop() {
-  // Send data every 5 seconds
+  // Send data every second
   Serial.println("Sending data.....");
   sendAllSensorData();
   delay(1000);

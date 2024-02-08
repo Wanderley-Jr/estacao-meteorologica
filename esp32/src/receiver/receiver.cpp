@@ -1,14 +1,14 @@
-#include <heltec.h>
-#include <SPI.h>
-#include <Crypto.h>
-#include <AES.h>
-#include <ArduinoJson.h>
-#include <Packet.h>
-#include <CRC32.h>
-#include <mutex>
-#include <WiFi.h>
 #include <HTTPClient.h>
-#include <secrets.h>
+#include <WiFi.h>
+
+#include <heltec.h>
+#include <ArduinoJson.h>
+#include <AES.h>
+#include <CRC32.h>
+
+// ~/include/
+#include <Packet.h>
+#include <Secrets.h>
 
 /* 
  * AES128 setup
@@ -27,7 +27,6 @@ QueueHandle_t packetQueue = xQueueCreate(7, sizeof(Packet));
 
 Packet receivePacket() {
 	Packet packet;
-
 	delay(10);
 
 	do {
@@ -46,7 +45,7 @@ Packet receivePacket() {
 	return packet;
 }
 
-void postPacketToServer(const Packet packet) {
+void postPacketToServer() {
 	String body;
 	serializeJson(json, body);
 	
@@ -55,13 +54,19 @@ void postPacketToServer(const Packet packet) {
 	Serial.print("]: ");
 	Serial.println(body);
 
-  	int httpResponseCode = http.POST(body);
-	json.clear();
+	int httpResponseCode = http.begin("https://192.168.1.2/upload_measurement.php");
 
-	http.begin("https://192.168.1.2/upload_measurement.php");
+	if (!httpResponseCode) {
+		Serial.println("Failed to connect to HTTP server!");
+		return;
+	}
+
   	http.addHeader("Content-Type", "application/json");
+  	httpResponseCode = http.POST(body);
 
-	if (httpResponseCode>0) {
+	if (httpResponseCode > 0) {
+		json.clear();
+
 		Serial.print("HTTP Response code: ");
 		Serial.println(httpResponseCode);
 
@@ -82,24 +87,29 @@ void loop() {
 	xQueueSend(packetQueue, &packet, portMAX_DELAY);
 }
 
+void checkWifiConnection() {
+	if (WiFi.status() != WL_CONNECTED) {
+		delay(10);
+		Serial.printf("\nConnecting to wifi network: %s\n", WIFI_NAME);
+
+		while (WiFi.status() != WL_CONNECTED) {
+			WiFi.disconnect();
+			WiFi.persistent(false);
+			WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
+			delay(5000);
+			Serial.println("Attemping connection...");
+		}
+
+		Serial.println("Connected to wifi network!\n");
+	}
+}
+
 void internetSendTask(void *pvParameters) {
 	Packet packet;
 
 	for (;;) {
 		// Connect to wifi
-		if (WiFi.status() != WL_CONNECTED) {
-			delay(10);
-			Serial.printf("\nConnecting to wifi network: %s\n", WIFI_NAME);
-
-			WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
-
-			while (WiFi.status() != WL_CONNECTED) {
-				delay(1000);
-				Serial.println("Attemping connection...");
-			}
-
-			Serial.println("Connected to wifi network!\n");
-		}
+		checkWifiConnection();
 		
 		xQueueReceive(packetQueue, &packet, portMAX_DELAY);
 
@@ -114,7 +124,7 @@ void internetSendTask(void *pvParameters) {
 
 		// Post packets to internet every 5 seconds.
 		if (millis() - lastSentPacketTime >= 5000) {
-			postPacketToServer(packet);
+			postPacketToServer();
 			lastSentPacketTime = millis();
 		}
 	}

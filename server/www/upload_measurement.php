@@ -1,30 +1,36 @@
 <?php
-    http_response_code(500);
     require_once "../common/database.php";
-    $sensor_data = json_decode(file_get_contents('php://input'), true);
 
-    $stmt = $db->prepare(
-        "INSERT INTO Measurements(soil_temperature, soil_humidity, air_temperature, air_humidity, pressure, rain, luminosity) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)"
-    );
-
-    $parameters = array("sTm", "sHm", "aTm", "aHm", "prs", "rai", "lum");
-    foreach ($parameters as $param) {
-        if (!isset($sensor_data[$param])) {
-            http_response_code(400);
-            die("Error: Missing measurement for: $param");
-        }
+    try {
+        $db = getDatabaseConnection();
     }
-
-    $types = str_repeat("d", sizeof($parameters));
-    $values = array_map(fn($param) => $sensor_data[$param], $parameters);
-    $stmt->bind_param($types, ...$values);
-
-    if ($stmt->execute()) {
-        http_response_code(200); // Or 201
-        echo "Data inserted into table successfully";
-    } else {
+    catch (error $err) {
         http_response_code(500);
-        die("Error inserting data: " . $stmt->error);
+        die("Error setting up database!");
     }
+
+    $sensorData = json_decode(file_get_contents('php://input'), true);
+
+    $sensorMappings = [
+        "sTm" => "soilTemperature",
+        "sHm" => "soilHumidity",
+        "aTm" => "airTemperature",
+        "aHm" => "airHumidity",
+        "rai" => "rain",
+        "lum" => "luminosity",
+        "prs" => "pressure"
+    ];
+
+    foreach ($sensorData as $name=>$value) {
+        if (!isset($sensorMappings[$name])) continue;
+
+        $mapped = $sensorMappings[$name];
+        $sensorId = findSensorId($db, $mapped);
+        $client = 1;
+
+        insertMeasurement($db, $client, $sensorId, $value);
+    }
+
+    http_response_code(200);
+    echo "Data inserted into table successfully!";
 ?>

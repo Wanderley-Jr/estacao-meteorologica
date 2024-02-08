@@ -13,6 +13,6 @@ struct Packet {
 };
 
 Packet createPacket(const unsigned int id, const char* name, const float value);
-bool verifyPacket(Packet packet);
+bool verifyPacket(const Packet& packet);
 
 #endif

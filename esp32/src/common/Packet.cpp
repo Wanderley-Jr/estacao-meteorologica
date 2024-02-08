@@ -1,10 +1,9 @@
-#include <Packet.h>
-#include <Arduino.h>
 #include <CRC32.h>
-#include <secrets.h>
+#include <Packet.h>
+#include <Secrets.h>
 
-int getCrcHash(Packet packet) {
-    static CRC32 crc32;
+int getCrcHash(const Packet& packet) {
+    CRC32 crc32;
     crc32.reset();
     crc32.update(packet.id);
     crc32.update(packet.name, PACKET_NAME_LENGTH);
@@ -29,7 +28,7 @@ Packet createPacket(const unsigned int id, const char* name, const float value) 
     return packet;
 }
 
-bool verifyPacket(Packet packet) {
+bool verifyPacket(const Packet& packet) {
     int hash = getCrcHash(packet);
     
     if (hash != packet.crc32) {
