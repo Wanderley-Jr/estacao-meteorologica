@@ -1,0 +1,9 @@
+POST http://localhost:8000/api/insert_measurement
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer 2|ePukqOM8hpoFu59B0cIiXX2C3N4BKNfZNcwogS8tbc2d0562
+
+{
+    "name": "sTm",
+    "value": "45"
+}
