@@ -34,6 +34,10 @@ class MeasurementController extends Controller
         ->orderBy("time")
         ->get(['value', 'time']);
 
+        if ($measurements->isEmpty()) {
+            return [];
+        }
+
         return [
             "current" => $measurements->last()["value"],
             "average" => $measurements->avg("value"),
