@@ -1,9 +1,14 @@
-POST http://localhost:8000/api/insert_measurement
+POST http://localhost:8000/measurements/
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 2|ePukqOM8hpoFu59B0cIiXX2C3N4BKNfZNcwogS8tbc2d0562
+Authorization: Bearer 1|dCt9tmj9oJi0i8agCPMrr0Pw5Yxw9O0mTnKra6D9a5a9c368
 
 {
-    "name": "sTm",
-    "value": "45"
+    "sensor": "soil_temperature",
+    "value": 150
 }
+
+# GET http://localhost:8000/api/measurements?sensor=soil_temperature&start=2024-02-24%2018:00:00
+# Content-Type: application/json
+# Accept: application/json
+# Authorization: Bearer 2|RdE2mBRZagiuSnANh3pIdgLI5cNoxl2BeCyrEWtv50a70c87

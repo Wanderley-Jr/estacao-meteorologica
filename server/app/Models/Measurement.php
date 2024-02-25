@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Eloquent as Model;
 
 /**
  * App\Models\Measurement
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|Measurement newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Measurement newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Measurement query()
- * @mixin \Eloquent
+ * @mixin \Builder
  */
 class Measurement extends Model
 {

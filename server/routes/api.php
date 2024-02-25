@@ -1,8 +1,6 @@
 <?php
 
-use App\Models\Measurement;
-use App\Models\Sensor;
-use Illuminate\Http\Request;
+use App\Http\Controllers\MeasurementController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,27 +14,3 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->post('/insert_measurement', function (Request $request) {
-    $json = $request->json();
-
-    $sensorMappings = [
-        "sTm" => "soil_temperature",
-        "sHm" => "soil_humidity",
-        "aTm" => "air_temperature",
-        "aHm" => "air_humidity",
-        "rai" => "rain",
-        "lum" => "luminosity",
-        "prs" => "pressure",
-    ];
-
-    $sensorName = $sensorMappings[$json->getString('name')];
-    $sensor = Sensor::query()->where('name', $sensorName)->first();
-    $sensorValue = $json->getInt('value');
-
-    $measurement = new Measurement(['value' => $sensorValue]);
-    $measurement->user()->associate($request->user());
-    $measurement->sensor()->associate($sensor);
-    $measurement->save();
-    
-    return "success";
-});

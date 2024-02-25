@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('measurements', function (Blueprint $table) {
             $table->id();
             $table->double('value');
-            $table->timestamp('time')->default(now());
+            $table->timestamp('time')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Sensor::class)->constrained()->cascadeOnDelete();
             $table->timestamps();
