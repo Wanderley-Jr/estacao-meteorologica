@@ -1,3 +1,5 @@
+#include <map>
+
 #include <HTTPClient.h>
 #include <WiFi.h>
 
@@ -54,25 +56,31 @@ void postPacketToServer() {
 	Serial.print("]: ");
 	Serial.println(body);
 
-	int httpResponseCode = http.begin("https://192.168.1.2/upload_measurement.php");
+	int httpResponseCode = http.begin("http://192.168.0.102:8000/measurements/");
 
 	if (!httpResponseCode) {
 		Serial.println("Failed to connect to HTTP server!");
 		return;
 	}
 
+	http.addHeader("Accept", "application/json");
   	http.addHeader("Content-Type", "application/json");
+	http.addHeader("Authorization", API_TOKEN);
   	httpResponseCode = http.POST(body);
 
 	if (httpResponseCode > 0) {
-		json.clear();
-
 		Serial.print("HTTP Response code: ");
 		Serial.println(httpResponseCode);
 
 		Serial.println("Payload: ");
+		if (http.getSize() > 1000) {
+			Serial.println("<Too Large>");
+		}
+		else {
+			Serial.println(http.getString());
+		}
 		String payload = http.getString();
-		Serial.println(payload);
+		
 	}
 	else {
 		Serial.print("An error occurred while POSTing data. HTTP Response code: ");
@@ -106,6 +114,16 @@ void checkWifiConnection() {
 
 void internetSendTask(void *pvParameters) {
 	Packet packet;
+	
+	std::map<std::string, std::string> sensorMappings = {
+        {"sTm", "soil_temperature"},
+        {"sHm", "soil_humidity"},
+        {"aTm", "air_temperature"},
+        {"aHm", "air_humidity"},
+        {"rai", "rain"},
+        {"lum", "luminosity"},
+        {"prs", "pressure"},
+    };
 
 	for (;;) {
 		// Connect to wifi
@@ -114,17 +132,19 @@ void internetSendTask(void *pvParameters) {
 		xQueueReceive(packetQueue, &packet, portMAX_DELAY);
 
 		// Add 0 terminator to string name
-		// TODO: remap sensor names into more understandable ones
 		char sensorName[PACKET_NAME_LENGTH+1];
 		memcpy(sensorName, packet.name, PACKET_NAME_LENGTH);
 		sensorName[PACKET_NAME_LENGTH] = 0;
 
-		// Save sensor name & value to JSON
-		json[sensorName] = packet.value;
+		// Append sensor name & value to JSON
+		JsonVariant obj = json.add();
+		obj["sensor"] = sensorMappings[sensorName];
+		obj["value"] = packet.value;
 
 		// Post packets to internet every 5 seconds.
 		if (millis() - lastSentPacketTime >= 5000) {
 			postPacketToServer();
+			json.clear();
 			lastSentPacketTime = millis();
 		}
 	}
