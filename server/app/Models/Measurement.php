@@ -2,32 +2,45 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
-use Eloquent as Model;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * App\Models\Measurement
  *
- * @property-read \App\Models\Sensor|null $sensor
- * @property-read \App\Models\User|null $user
- * @method static \Illuminate\Database\Eloquent\Builder|Measurement newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Measurement newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Measurement query()
- * @mixin \Builder
+ * @property int $id
+ * @property float $value
+ * @property int $time
+ * @property int $user_id
+ * @property int $sensor_id
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read \App\Models\Sensor $sensor
+ * @property-read \App\Models\User $user
+ * @method static Builder|Measurement newModelQuery()
+ * @method static Builder|Measurement newQuery()
+ * @method static Builder|Measurement query()
+ * @method static Builder|Measurement whereCreatedAt($value)
+ * @method static Builder|Measurement whereId($value)
+ * @method static Builder|Measurement whereSensorId($value)
+ * @method static Builder|Measurement whereTime($value)
+ * @method static Builder|Measurement whereUpdatedAt($value)
+ * @method static Builder|Measurement whereUserId($value)
+ * @method static Builder|Measurement whereValue($value)
+ * @mixin Eloquent
  */
-class Measurement extends Model
-{
-    protected $fillable = ['value', 'time'];
-    protected $casts = ['time' => 'timestamp'];
+class Measurement extends Model {
+    protected $fillable = ["value", "time"];
+    protected $casts = ["time" => "timestamp"];
 
-    public function user()
-    {
+    public function user(): BelongsTo {
         return $this->belongsTo(User::class);
     }
 
-    public function sensor()
-    {
+    public function sensor(): BelongsTo {
         return $this->belongsTo(Sensor::class);
     }
 }

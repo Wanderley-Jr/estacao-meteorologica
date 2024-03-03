@@ -10,7 +10,7 @@ export default function Dashboard({ auth }) {
         >
             <Head title="Dashboard" />
 
-            <div className="grid py-12 grid-cols-2 place-items-center">
+            <div className="grid bg- py-12 grid-cols-2 place-items-center">
                 <SensorChart></SensorChart>
                 <SensorChart></SensorChart>
             </div>

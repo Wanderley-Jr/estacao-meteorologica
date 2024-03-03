@@ -1,11 +1,14 @@
-import { router, usePage } from "@inertiajs/react";
-import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import { FormControl, MenuItem, Select } from "@mui/material";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
-import { BarChart } from '@mui/x-charts/BarChart';
+import { useEffect, useState } from "react";
 import { LineChart } from "@mui/x-charts";
 
-const sensors = {
+const sensors= {
+    [a]: {
+        title: "Temperatura do solo",
+        unit: "°C",
+        transform: (x) => x.toFixed(2)
+    },
     soil_temperature: {
         title: "Temperatura do solo",
         unit: "°C",
@@ -43,20 +46,24 @@ const sensors = {
     }
 };
 
-export default function SensorChart() {
+/**
+ * @param {string} value
+ * @returns {JSX.Element}
+ */
+export default function SensorChart(value) {
     const [option, setOption] = useState(0)
     const [data, setData] = useSensorData()
 
     return (
         <div className="bg-white w-fit shadow-sm sm:rounded-lg p-4">
-            <ChartHeader 
+            <ChartHeader
                 options={[
                     "Hoje",
                     "Últimos 7 dias",
                     "Últimos 30 dias"
-                ]} 
+                ]}
                 selected={option}
-                onSelect={setOption} 
+                onSelect={setOption}
                 current={data?.at(-1).value ?? 0}
             />
             <Chart data={data ?? []} />
@@ -66,8 +73,6 @@ export default function SensorChart() {
 
 function useSensorData() {
     const [data, setData] = useState()
-
-    axios.AxiosHeaders()
 
     // On mount, load all data from server
     useEffect(() => {
@@ -105,13 +110,13 @@ function useSensorData() {
     return /** @type {const} */ ([data, setData])
 }
 
-/** 
+/**
  * @param {object} props
  * @param {number} props.current
  * @param {number} props.average
  * @param {string[]} props.options
  * @param {string} props.selected
- * @param {(a: number) => void} props.onSelect 
+ * @param {(a: number) => void} props.onSelect
  */
 function ChartHeader({ current, average = 0, onSelect, selected }) {
     return (
@@ -148,8 +153,8 @@ function Chart({ data }) {
         <LineChart
             width={750}
             height={500}
-            xAxis={[{ 
-                data: data.map(it => new Date(it.time*1000)), 
+            xAxis={[{
+                data: data.map(it => new Date(it.time*1000)),
                 scaleType: "time",
             }]}
             series={[{

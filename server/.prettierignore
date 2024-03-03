@@ -1,0 +1,8 @@
+# Ignore files located at root of directory (including large ones such as _ide_helper.php)
+/*
+!/*/
+
+# Ignore libraries & storage
+vendor/
+node_modules/
+storage/
