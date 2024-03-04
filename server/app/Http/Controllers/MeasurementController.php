@@ -7,9 +7,7 @@ use App\Models\Measurement;
 use App\Models\Sensor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 class MeasurementController extends Controller {
     public function get(Request $request): array {
@@ -41,16 +39,14 @@ class MeasurementController extends Controller {
 
     public function post(Request $request): void {
         $request->validate([
-            "*.sensor" => ["required", Rule::exists("sensors", "name")],
-            "*.value" => "required|numeric",
+            "sensor" => ["required", Rule::exists("sensors", "name")],
+            "value" => "required|numeric",
         ]);
 
-        foreach ($request->all() as $res) {
-            $sensor = Sensor::firstWhere("name", $res["sensor"]);
-            $measurement = new Measurement(["value" => $res["value"]]);
-            $measurement->user()->associate($request->user());
-            $measurement->sensor()->associate($sensor);
-            $measurement->save();
-        }
+        $sensor = Sensor::firstWhere("name", $request["sensor"]);
+        $measurement = new Measurement(["value" => $request["value"]]);
+        $measurement->user()->associate($request->user());
+        $measurement->sensor()->associate($sensor);
+        $measurement->save();
     }
 }

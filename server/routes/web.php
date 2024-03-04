@@ -27,31 +27,27 @@ Route::get("/", function () {
 });
 
 Route::get("/dashboard", function () {
-    return Inertia::render("Dashboard");
+    return Inertia::render("Dashboard/Dashboard");
 })
     ->middleware(["auth", "verified"])
     ->name("dashboard");
 
 Route::middleware("auth")->group(function () {
-    Route::get("/profile", [ProfileController::class, "edit"])->name(
-        "profile.edit"
-    );
+    Route::get("/profile", [ProfileController::class, "edit"])->name("profile.edit");
 
-    Route::patch("/profile", [ProfileController::class, "update"])->name(
-        "profile.update"
-    );
+    Route::patch("/profile", [ProfileController::class, "update"])->name("profile.update");
 
-    Route::delete("/profile", [ProfileController::class, "destroy"])->name(
-        "profile.destroy"
+    Route::delete("/profile", [ProfileController::class, "destroy"])->name("profile.destroy");
+
+    Route::post("/profile/create-token", [ProfileController::class, "createToken"])->name("token.create");
+
+    Route::delete("/profile/destroy-token/{tokenName}", [ProfileController::class, "destroyToken"])->name(
+        "token.destroy"
     );
 });
 
-Route::middleware("auth:sanctum")->group(function () {
-    Route::get("measurements", [MeasurementController::class, "get"]);
-
-    Route::middleware("api")
-        ->withoutMiddleware("web")
-        ->post("measurements", [MeasurementController::class, "post"]);
+Route::middleware("auth")->group(function () {
+    Route::get("/measurements", [MeasurementController::class, "get"]);
 });
 
 require __DIR__ . "/auth.php";

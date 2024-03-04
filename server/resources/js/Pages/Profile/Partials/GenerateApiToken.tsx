@@ -1,28 +1,27 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import Modal from '@/Components/Modal';
-import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
-import { useForm, router, usePage } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { Transition } from '@headlessui/react';
 
-/**
- * @param {object} props 
- * @param {string[]} props.apiTokens
- * @param {string} props.token
- * @returns 
- */
-export default function GenerateApiToken({ apiTokens, token, className = '' }) {
+export type GenerateApiTokenProps = {
+    className: string
+    apiTokens: string[]
+    token?: string
+}
+
+export default function GenerateApiToken({ apiTokens, token, className = '' }: GenerateApiTokenProps) {
     const [modalShown, setModalShown] = useState(true)
 
     const { data, setData, errors, post, reset, processing, recentlySuccessful } = useForm({
         token_name: ''
     });
 
-    const createToken = (e) => {
+    const createToken: React.FormEventHandler<HTMLFormElement> = e => {
         e.preventDefault();
 
         post(route('token.create'), {
@@ -34,8 +33,10 @@ export default function GenerateApiToken({ apiTokens, token, className = '' }) {
         });
     };
 
-    const deleteToken = (name) => {
-        router.delete(route('token.destroy', name), { preserveScroll: true })
+    const deleteToken = (name: string) => {
+        router.delete(route('token.destroy', name), { 
+            preserveScroll: true 
+        })
     }
 
     return (
@@ -70,7 +71,7 @@ export default function GenerateApiToken({ apiTokens, token, className = '' }) {
                         autoComplete="off"
                     />
 
-                    <InputError message={errors.current_password} className="mt-2" />
+                    <InputError message={errors.token_name} className="mt-2" />
                 </div>
 
                 <div className="flex items-center gap-4">

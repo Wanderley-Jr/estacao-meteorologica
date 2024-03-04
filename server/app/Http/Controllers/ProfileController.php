@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
-use App\Models\User;
-use DB;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +20,7 @@ class ProfileController extends Controller {
         $user = $request->user();
 
         return Inertia::render("Profile/Edit", [
-            "mustVerifyEmail" => $request->user() instanceof MustVerifyEmail,
+            "mustVerifyEmail" => $user instanceof MustVerifyEmail,
             "status" => session("status"),
             "apiTokens" => $user->tokens->pluck("name")->toArray(),
             "token" => session("token"),
@@ -66,25 +64,19 @@ class ProfileController extends Controller {
 
     public function createToken(Request $request): RedirectResponse {
         $request->validate(["token_name" => "required"]);
-        $name = $request->json()->getString("token_name");
-        /** @var \App\Models\User */
+
+        /** @var \App\Models\User $user */
         $user = $request->user();
+        $name = $request->input("token_name");
+
         $token = $user->createToken($name)->plainTextToken;
         return back()->with("token", $token);
     }
 
-    public function destroyToken(
-        Request $request,
-        string $tokenName
-    ): RedirectResponse {
-        /** @var \App\Models\User */
+    public function destroyToken(Request $request, string $tokenName): RedirectResponse {
+        /** @var \App\Models\User $user */
         $user = $request->user();
-
-        $token = $user
-            ->tokens()
-            ->getQuery()
-            ->where("name", $tokenName)
-            ->first();
+        $token = $user->tokens()->getQuery()->firstWhere("name", $tokenName);
 
         if ($token != null) {
             $token->delete();

@@ -10,3 +10,7 @@
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+use App\Http\Controllers\MeasurementController;
+
+Route::middleware("auth:sanctum")->post("/measurements", [MeasurementController::class, "post"]);

@@ -69,9 +69,7 @@ class ProfileTest extends TestCase {
                 "password" => "wrong-password",
             ]);
 
-        $response
-            ->assertSessionHasErrors("password")
-            ->assertRedirect("/profile");
+        $response->assertSessionHasErrors("password")->assertRedirect("/profile");
 
         $this->assertNotNull($user->fresh());
     }

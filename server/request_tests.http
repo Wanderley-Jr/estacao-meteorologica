@@ -1,7 +1,7 @@
-POST http://localhost:8000/measurements/
+POST http://192.168.0.102:8000/measurements/
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|dCt9tmj9oJi0i8agCPMrr0Pw5Yxw9O0mTnKra6D9a5a9c368
+Authorization: Bearer 1|QB7zzoapJqZr88YUsc9arxoLnXU6uuA3Uv4afZdW913c778b
 
 {
     "sensor": "soil_temperature",

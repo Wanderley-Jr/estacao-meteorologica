@@ -23,6 +23,10 @@ return new class extends Migration {
                 ->foreignIdFor(Sensor::class)
                 ->constrained()
                 ->cascadeOnDelete();
+
+            // Measurements for the same sensor must always have unique timestamps
+            $table->unique(["sensor_id", "time"]);
+
             $table->timestamps();
         });
     }

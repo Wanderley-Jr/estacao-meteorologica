@@ -2,9 +2,8 @@
 
 namespace App\Models;
 
-use Eloquent;
+use Eloquent as Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 

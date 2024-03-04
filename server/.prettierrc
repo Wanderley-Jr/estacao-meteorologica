@@ -1,7 +1,5 @@
 {
-  "tabWidth": 4,
-  "useTabs": false,
-  "braceStyle": "1tbs",
   "parser": "php",
-  "plugins": [ "@prettier/plugin-php" ]
+  "plugins": [ "@prettier/plugin-php" ],
+  "braceStyle": "1tbs"
 }
