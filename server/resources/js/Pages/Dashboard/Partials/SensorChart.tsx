@@ -133,7 +133,7 @@ function Chart({ type, data }: ChartProps) {
             width={600}
             height={400}
             xAxis={[{
-                data: data.map(it => new Date(it.time*1000)),
+                data: data.map(it => new Date(it.time*1000 + 3*3600*1000)),
                 scaleType: "time",
             }]}
             yAxis={[{ min: minY, max: maxY }]}

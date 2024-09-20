@@ -30,10 +30,32 @@ Packet receivePacket() {
 	Packet packet;
 	delay(10);
 
+	while (true) {
+		Serial.printf("Attempting to read new packet...\n");
+		while (!LoRa.parsePacket());  // Wait for packet
+		Serial.printf("Packet found!\n");
+
+		// Decrypt packet
+		byte encrypted[16];
+		LoRa.readBytes(encrypted, 16);
+		aes128.decryptBlock((byte*)&packet, encrypted);
+
+		if (verifyPacket(packet)) {
+			break;
+		}
+
+		// If we have an invalid packet, read rest of buffer
+		while (LoRa.available()) {
+			LoRa.read();
+		}
+	}
+
 	do {
+		Serial.printf("Attempting to read new packet...\n");
 		// Wait for packet
 		while (!LoRa.parsePacket()) {
 		}
+		Serial.printf("Packet found!\n");
 
 		// Decrypt packet
 		byte encrypted[16];
@@ -87,42 +109,40 @@ void postPacketToServer() {
 	http.end();
 }
 
-void loop() {
-	Packet packet = receivePacket();
-	xQueueSend(packetQueue, &packet, portMAX_DELAY);
-}
-
 void checkWifiConnection() {
 	if (WiFi.status() != WL_CONNECTED) {
-		WiFi.disconnect();
-		delay(5000);
 		Serial.printf("\nConnecting to wifi network: %s\n", WIFI_NAME);
+		WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
+		delay(5000);
 
 		while (WiFi.status() != WL_CONNECTED) {
 			Serial.println("Attemping connection...");
-			WiFi.begin(WIFI_NAME, WIFI_PASSWORD);
 			delay(10000);
-			if (WiFi.status() != WL_CONNECTED) {
-				WiFi.disconnect();
-			}
 		}
 
 		Serial.println("Connected to wifi network!\n");
 	}
 }
 
+std::map<std::string, std::string> sensorMappings = {
+    {"sTm", "soil_temperature"},
+    {"sHm", "soil_humidity"},
+    {"aTm", "air_temperature"},
+    {"aHm", "air_humidity"},
+    {"rai", "rain"},
+    {"lum", "luminosity"},
+    {"prs", "pressure"},
+};
+
+// Executado repetidamente no núcleo 1
+void loop() {
+	Packet packet = receivePacket();
+	xQueueSend(packetQueue, &packet, portMAX_DELAY);
+}
+
+// Executado no núcleo 2
 void internetSendTask(void* pvParameters) {
 	Packet packet;
-
-	std::map<std::string, std::string> sensorMappings = {
-	    {"sTm", "soil_temperature"},
-	    {"sHm", "soil_humidity"},
-	    {"aTm", "air_temperature"},
-	    {"aHm", "air_humidity"},
-	    {"rai", "rain"},
-	    {"lum", "luminosity"},
-	    {"prs", "pressure"},
-	};
 
 	for (;;) {
 		xQueueReceive(packetQueue, &packet, portMAX_DELAY);
@@ -145,29 +165,24 @@ void internetSendTask(void* pvParameters) {
 void setup() {
 	// Serial setup
 	Serial.begin(115200);
-	while (!Serial) {
-	}
-
-	// Screen setup
-	Heltec.begin();
-	Heltec.display->displayOn();
 
 	// AES128
 	aes128.setKey(AES128_KEY, 16);
 
 	// LoRa setup
 	LoRa.setPins(18, 14, 26);
+	LoRa.setSpreadingFactor(12);
 	while (!LoRa.begin(915E6, true)) {
 		Serial.println("Failure on LoRa setup!");
 		delay(1000);
 	}
 	LoRa.receive();
-	Serial.println("Setup finished!!!");
+	Serial.println("Receiver setup finished!!!");
 
 	http.setTimeout(15000);
 	http.setConnectTimeout(15000);
 
 	// Setup internet thread
 	xTaskCreatePinnedToCore(
-	    &internetSendTask, "INTERNET_SEND_TASK", 8192, nullptr, 0, nullptr, 0);
+	    &internetSendTask, "INTERNET_SEND_TASK", 16384, nullptr, 0, nullptr, 0);
 }

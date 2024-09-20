@@ -43,6 +43,7 @@ void setup() {
 
 	// LoRa setup
 	LoRa.setPins(18, 14, 26);
+	LoRa.setSpreadingFactor(12);
 	while (!LoRa.begin(915E6, true)) {
 		Serial.println("Fail on LoRa startup!");
 		delay(1000);
@@ -84,6 +85,8 @@ void sendPacket(const char id, const char *name, const float value) {
 	LoRa.beginPacket();
 	LoRa.write(encrypted, sizeof(encrypted));
 	LoRa.endPacket();
+
+	delay(2500);
 
 	Serial.print("Sent packet: ");
 	for (int i = 0; i < sizeof(encrypted); i++) {
